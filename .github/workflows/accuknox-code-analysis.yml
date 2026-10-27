@@ -1,0 +1,36 @@
+# AccuKnox ASPM scanning for the lab repo.
+# Before this runs, set three repository secrets under
+# Settings > Secrets and variables > Actions:
+#   ACCUKNOX_TOKEN     - Settings > Tokens in the AccuKnox console
+#   ACCUKNOX_ENDPOINT  - e.g. cspm.demo.accuknox.com (no https://)
+#   ACCUKNOX_LABEL     - the label you created for this lab
+# The sbom scan needs a Project named "accuknox-lab" under SBOM > Projects
+# in the console, with the Application classifier.
+name: AccuKnox Code Analysis
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  code-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: AccuKnox scans
+        uses: accuknox/accuknox-code-analysis@latest
+        with:
+          scan_type: "sast, sca, secret, iac, sbom"
+          accuknox_token: ${{ secrets.ACCUKNOX_TOKEN }}
+          accuknox_endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}
+          accuknox_label: ${{ secrets.ACCUKNOX_LABEL }}
+          soft_fail: true
+          upload_artifact: true
+          sbom_scan_type: filesystem
+          sbom_scan_path: .
+          sbom_project_name: accuknox-lab
